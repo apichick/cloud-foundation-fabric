@@ -61,6 +61,8 @@ locals {
   }
   service_accounts_jit_services = [
     "cloudasset.googleapis.com",
+    "cloudasset.googleapis.com",
+    "gkehub.googleapis.com",
     "pubsub.googleapis.com",
     "secretmanager.googleapis.com",
     "sqladmin.googleapis.com"
