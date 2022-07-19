@@ -21,7 +21,7 @@ output "config" {
     authentication:
       - name: oidc-azuread
         oidc:
-          clientID: ${azuread_application_password.application_password.application_object_id}
+          clientID: ${azuread_application.application.application_id}
           clientSecret: ${azuread_application_password.application_password.value}
           cloudConsoleRedirectURI: ${local.console_redirect_uri}
           extraParams: prompt=consent, access_type=offline
