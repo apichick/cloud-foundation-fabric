@@ -24,6 +24,9 @@ resource "google_gke_hub_membership" "membership" {
       resource_link = each.value
     }
   }
+  authority {
+    issuer = "https://container.googleapis.com/v1/${each.value}"
+  }
 }
 
 resource "google_gke_hub_feature" "configmanagement" {
