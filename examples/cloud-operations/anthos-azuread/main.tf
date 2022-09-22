@@ -15,9 +15,8 @@
  */
 
 locals {
-  app_role_ids = ["User.Read.All", "Group.Read.All"]
   console_redirect_uri = "https://console.cloud.google.com/kubernetes/oidc"
-  cli_redirect_uri = "http://localhost:1025/callback"
+  cli_redirect_uri     = "http://localhost:1025/callback"
 }
 
 data "azuread_application_published_app_ids" "well_known" {}
@@ -29,15 +28,15 @@ resource "azuread_service_principal" "msgraph" {
 
 resource "azuread_application" "application" {
   display_name = "Anthos"
-  required_resource_access {
+   required_resource_access {
     resource_app_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-
-    dynamic "resource_access" {
-      for_each = toset(local.app_role_ids)
-      content {
-        id   = azuread_service_principal.msgraph.app_role_ids[resource_access.value]
-        type = "Role"
-      }
+    resource_access {
+      id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["Group.Read.All"]
+      type = "Scope"
+    }
+    resource_access {
+      id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read.All"]
+      type = "Scope"
     }
   }
   web {
@@ -53,13 +52,11 @@ resource "azuread_application_password" "application_password" {
 }
 
 resource "azuread_service_principal" "service_principal" {
-  application_id               = azuread_application.application.application_id
+  application_id = azuread_application.application.application_id
 }
 
-resource "azuread_app_role_assignment" "app_role_assignments" {
-  for_each            = toset(local.app_role_ids)
-  app_role_id         = azuread_service_principal.msgraph.app_role_ids[each.value]
-  principal_object_id = azuread_service_principal.service_principal.object_id
-  resource_object_id  = azuread_service_principal.msgraph.object_id
+resource "azuread_service_principal_delegated_permission_grant" "delegated_permission_grants" {
+  service_principal_object_id          = azuread_service_principal.service_principal.object_id
+  resource_service_principal_object_id = azuread_service_principal.msgraph.object_id
+  claim_values                         = ["Group.Read.All", "User.Read.All"]
 }
-
