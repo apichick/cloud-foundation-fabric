@@ -12,24 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM locustio/locust:latest
 
-# Start with a base image Python 3.9.12 Debian 11 (bullseye) slim 
-FROM python:3.9.12-slim-bullseye
+ADD locust-files /home/locust/locust-files
 
-# Add the licenses for third party software and libraries
-ADD licenses /licenses
+ADD run.sh /home/locust/run.sh
 
-# Add the external tasks directory into /tasks
-ADD locust-tasks /locust-tasks
-
-# Install the required dependencies via pip
-RUN pip install -r /locust-tasks/requirements.txt
-
-# Expose the required Locust ports
-EXPOSE 5557 5558 8089
-
-# Set script to be executable
-RUN chmod 755 /locust-tasks/run.sh
-
-# Start Locust using LOCUS_OPTS environment variable
-ENTRYPOINT ["/locust-tasks/run.sh"] 
+ENTRYPOINT ["/home/locust/run.sh"] 

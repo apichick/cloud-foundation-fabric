@@ -1,0 +1,37 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: istiod
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/name: istiod
+    app.kubernetes.io/part-of: google-cloud-managed-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: istiod
+  endpoints:
+  - port: 15014
+    interval: 60s
+    path: /metrics
+  targetLabels:
+    fromPod:
+    - from: app
+      to: app
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: istio-proxy
+  labels:
+    app.kubernetes.io/name: istio-proxy
+    app.kubernetes.io/part-of: google-cloud-managed-prometheus
+spec:
+  selector:
+    matchLabels:
+  endpoints:
+  - port: http-envoy-prom
+    scheme: http
+    interval: 60s
+    path: /stats/prometheus
+

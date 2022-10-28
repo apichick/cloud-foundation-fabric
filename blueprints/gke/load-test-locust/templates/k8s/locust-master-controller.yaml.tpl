@@ -28,14 +28,26 @@ spec:
       labels:
         app: locust-master
     spec:
+      tolerations:
+      - key: workloadType
+        operator: Equal
+        value: locust
+        effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workloadType
+                operator: In
+                values:
+                - locust 
       containers:
         - name: locust-master
-          image: ${IMAGE}
+          image: ${image}
           env:
             - name: LOCUST_MODE
               value: master
-            - name: TARGET_HOST
-              value: https://${SAMPLE_APP_TARGET}
           ports:
             - name: loc-master-web
               containerPort: 8089

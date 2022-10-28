@@ -44,7 +44,7 @@ spec:
                 - locust 
       containers:
         - name: locust-worker
-          image: ${image}
+          image: europe-west1-docker.pkg.dev/g-prj-cd-sb-locust-lt-2/registry/locust:latest
           env:
             - name: LOCUST_MODE
               value: worker

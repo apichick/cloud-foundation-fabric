@@ -15,18 +15,18 @@
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
-  name: locust-worker
+  name: locust-master
   labels:
-    name: locust-worker
+    name: locust-master
 spec:
-  replicas: 5
+  replicas: 1
   selector:
     matchLabels:
-      app: locust-worker
+      app: locust-master
   template:
     metadata:
       labels:
-        app: locust-worker
+        app: locust-master
     spec:
       tolerations:
       - key: workloadType
@@ -43,10 +43,18 @@ spec:
                 values:
                 - locust 
       containers:
-        - name: locust-worker
-          image: ${image}
+        - name: locust-master
+          image: europe-west1-docker.pkg.dev/g-prj-cd-sb-locust-lt-2/registry/locust:latest
           env:
             - name: LOCUST_MODE
-              value: worker
-            - name: LOCUST_MASTER
-              value: locust-master
+              value: master
+          ports:
+            - name: loc-master-web
+              containerPort: 8089
+              protocol: TCP
+            - name: loc-master-p1
+              containerPort: 5557
+              protocol: TCP
+            - name: loc-master-p2
+              containerPort: 5558
+              protocol: TCP

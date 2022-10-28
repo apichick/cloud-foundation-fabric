@@ -16,7 +16,7 @@
 
 locals {
   image = (
-    "${var.region}-docker.pkg.dev/${module.project.project_id}/${module.docker_artifact_registry.name}/locust-load-test:latest"
+    "${var.region}-docker.pkg.dev/${module.project.project_id}/${module.docker_artifact_registry.name}/locust:latest"
   )
 }
 
@@ -39,7 +39,16 @@ module "project" {
   ]
   iam = {
     "roles/artifactregistry.reader"      = [module.sa.iam_email],
-    "roles/container.nodeServiceAccount" = [module.sa.iam_email]
+    "roles/container.nodeServiceAccount" = [module.sa.iam_email],
+    "roles/monitoring.viewer" = [module.monitoring_sa.iam_email]
+  }
+  policy_list = {
+    "constraints/compute.restrictLoadBalancerCreationForTypes" = {
+      inherit_from_parent = null
+      suggested_value     = null
+      status              = true
+      values              = ["EXTERNAL_NETWORK_TCP_UDP", "INTERNAL_TCP_UDP"]
+    }
   }
 }
 
@@ -58,6 +67,26 @@ module "vpc" {
       }
     }
   ]
+}
+
+module "firewall" {
+  source     = "../../../modules/net-vpc-firewall"
+  project_id = module.project.project_id
+  network    = module.vpc.name
+  custom_rules    = { 
+    allow-istio = {
+      description          = "Allow "
+      direction            = "INGRESS"
+      action               = "allow"
+      sources              = []
+      ranges               = [var.master_cidr_block]
+      targets              = ["node"]
+      use_service_accounts = false
+      rules                = [{ protocol = "tcp", ports = [443, 15017] }]
+      extra_attributes = {
+        priority = 1000
+      }
+    }}
 }
 
 module "nat" {
@@ -82,6 +111,12 @@ module "cluster" {
     enable_private_endpoint = false
     master_global_access    = false
   }
+  enable_features = {
+    workload_identity = true
+  }
+  monitoring_config = {
+    managed_prometheus = true
+  }
 }
 
 module "cluster_nodepool" {
@@ -89,7 +124,7 @@ module "cluster_nodepool" {
   project_id      = module.project.project_id
   cluster_name    = module.cluster.name
   location        = var.zone
-  name            = "nodepool"
+  name            = "nodepool-istio"
   service_account = {
     email = module.sa.email
     scopes = "https://www.googleapis.com/auth/cloud-platform"
@@ -104,6 +139,37 @@ module "cluster_nodepool" {
       min_node_count = 3
     }
   }
+  tags = ["node"]
+}
+
+module "locust_cluster_nodepool" {
+  source          = "../../../modules/gke-nodepool"
+  project_id      = module.project.project_id
+  cluster_name    = module.cluster.name
+  location        = var.zone
+  name            = "nodepool-locust"
+  service_account = {
+    email = module.sa.email
+    scopes = "https://www.googleapis.com/auth/cloud-platform"
+  }
+  node_count      = { initial = 3 }
+  node_config = {
+    machine_type = "e2-standard-4"
+  }
+  nodepool_config = {
+    autoscaling = {
+      max_node_count = 10
+      min_node_count = 3
+    }
+  }
+  labels = {
+    workloadType = "locust"
+  }
+  taints = [{
+    key = "workloadType"
+    value = "locust"
+    effect = "NO_SCHEDULE"
+  }]
 }
 
 module "docker_artifact_registry" {
@@ -112,8 +178,6 @@ module "docker_artifact_registry" {
   location   = var.region
   format     = "DOCKER"
   id         = "${local.prefix}registry"
-  iam = {
-  }
 }
 
 module "sa" {
@@ -122,3 +186,19 @@ module "sa" {
   name       = "sa-load-test"
 }
 
+module "monitoring_sa" {
+  source     = "../../../modules/iam-service-account"
+  project_id = module.project.project_id
+  name       = "sa-monitoring"
+  iam = {
+    "roles/iam.workloadIdentityUser": ["serviceAccount:${module.project.project_id}.svc.id.goog[monitoring/default]"]
+  }
+}
+
+resource "local_file" "files" {
+  for_each = toset(["locust-master-controller.yaml", "locust-worker-controller.yaml"])
+  content  = templatefile("${path.module}/templates/k8s/${each.key}.tpl", { 
+    image = local.image
+  })
+  filename = "${path.module}/k8s/${each.key}"
+}
