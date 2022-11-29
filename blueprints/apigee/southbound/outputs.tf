@@ -16,5 +16,5 @@
 
 output "ip_address" {
   description = "IP address."
-  value       = module.ilb-l7.address
+  value       = module.glb.ip_address
 }

@@ -30,7 +30,7 @@ module "onprem_vpc" {
   name       = "vpc"
   subnets_proxy_only = [
     {
-      ip_cidr_range = var.proxy_only_subnet_ip_cidr_range
+      ip_cidr_range = var.onprem_proxy_only_subnet_ip_cidr_range
       name          = "regional-proxy"
       region        = var.region
       active        = true
@@ -38,11 +38,32 @@ module "onprem_vpc" {
   ]
   subnets = [
     {
-      ip_cidr_range = var.subnet_ip_cidr_range
+      ip_cidr_range = var.onprem_subnet_ip_cidr_range
       name          = "subnet"
       region        = var.region
     }
   ]
+}
+
+module "firewall" {
+  source     = "../../../modules/net-vpc-firewall"
+  project_id = module.onprem_project.project_id
+  network    = module.onprem_vpc.network.name
+  default_rules_config = {
+    disabled = true
+  }
+  ingress_rules = {
+    fw-allow-health-check = {
+      source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
+      targets       = ["http-server"]
+      rules         = [{ protocol = "tcp", ports = ["80"] }]
+    }
+    fw-allow-proxies = {
+      source_ranges = [var.onprem_proxy_only_subnet_ip_cidr_range]
+      targets       = ["http-server"]
+      rules         = [{ protocol = "tcp", ports = ["80"] }]
+    }
+  }
 }
 
 module "cos-nginx" {
@@ -79,24 +100,52 @@ module "mig" {
   name              = "mig"
   target_size       = 2
   instance_template = module.instance_template.template.self_link
+  named_ports = {
+    http = 80
+  }
+  health_check_config = {
+    check_interval_sec = 1
+    enable_logging = true
+    healthy_threshold = 1
+    http = {
+      port_name = "http"
+    }
+    timeout_sec = 1
+    unhealthy_threshold = 1
+  }
 }
 
-module "ilb-l7" {
+module "onprem_ilb_l7" {
   source     = "../../../modules/net-ilb-l7"
   name       = "ilb"
   project_id = module.onprem_project.project_id
   region     = var.region
   backend_service_configs = {
     default = {
+      port_name = "http"
       backends = [{
-        group = module.mig.group_manager.instance_group
+        group     = module.mig.group_manager.instance_group
       }]
+    }
+  }
+  health_check_configs = {
+    default = {
+      check_interval_sec = 1
+      enable_logging = true
+      healthy_threshold = 1
+      http = {
+        port_name = "http"
+        port_specification = "USE_NAMED_PORT"
+        request_path = "/"
+      }
+      timeout_sec = 1
+      unhealthy_threshold = 1
     }
   }
   vpc_config = {
     network    = module.onprem_vpc.self_link
     subnetwork = module.onprem_vpc.subnet_self_links["${var.region}/subnet"]
-  }  
+  }
   depends_on = [
     module.onprem_vpc.subnets_proxy_only
   ]

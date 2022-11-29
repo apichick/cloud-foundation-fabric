@@ -20,6 +20,24 @@ variable "apigee_project_id" {
   nullable    = false
 }
 
+variable "apigee_proxy_only_subnet_ip_cidr_range" {
+  description = "Subnet IP CIDR range."
+  type        = string
+  default     = "10.2.1.0/24"
+}
+
+variable "apigee_subnet_ip_cidr_range" {
+  description = "Subnet IP CIDR range."
+  type        = string
+  default     = "10.2.0.0/24"
+}
+
+variable "apigee_ilb_l7_psc_subnet_ip_cidr_range" {
+  description = "Subnet IP CIDR range."
+  type        = string
+  default     = "10.2.2.0/24"
+}
+
 variable "billing_account_id" {
   description = "Parameters for the creation of the new project."
   type        = string
@@ -61,10 +79,22 @@ variable "instances" {
   nullable = false
 }
 
+variable "onprem_proxy_only_subnet_ip_cidr_range" {
+  description = "Subnet IP CIDR range."
+  type        = string
+  default     = "10.1.1.0/24"
+}
+
 variable "onprem_project_id" {
   description = "Project ID."
   type        = string
   nullable    = false
+}
+
+variable "onprem_subnet_ip_cidr_range" {
+  description = "Subnet IP CIDR range."
+  type        = string
+  default     = "10.1.0.0/24"
 }
 
 variable "organization" {
@@ -88,12 +118,6 @@ variable "parent" {
   type        = string
 }
 
-variable "proxy_only_subnet_ip_cidr_range" {
-  description = "Subnet IP CIDR range."
-  type        = string
-  default     = "10.1.1.0/24"
-}
-
 variable "psc_config" {
   description = "PSC configuration."
   type        = map(string)
@@ -108,12 +132,6 @@ variable "region" {
 variable "shared_secret" {
   description = "VPN shared secret."
   type        = string
-}
-
-variable "subnet_ip_cidr_range" {
-  description = "Subnet IP CIDR range."
-  type        = string
-  default     = "10.1.0.0/24"
 }
 
 variable "zone" {

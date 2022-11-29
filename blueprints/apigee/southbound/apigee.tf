@@ -30,20 +30,39 @@ module "apigee_vpc" {
   source     = "../../../modules/net-vpc"
   project_id = module.apigee_project.project_id
   name       = var.organization.authorized_network
-  /*subnets_psc = [for k, v in var.psc_config :
+  subnets_proxy_only = [
+    {
+      ip_cidr_range = var.apigee_proxy_only_subnet_ip_cidr_range
+      name          = "regional-proxy"
+      region        = var.region
+      active        = true
+    }
+  ]
+  subnets = [
+    {
+      ip_cidr_range = var.apigee_subnet_ip_cidr_range
+      name          = "subnet"
+      region        = var.region
+    }
+  ]
+  subnets_psc = concat([{
+    ip_cidr_range = var.apigee_ilb_l7_psc_subnet_ip_cidr_range
+    name          = "subnet-psc-ilb-l7"
+    region        = var.region
+  }], [for k, v in var.psc_config :
     {
       ip_cidr_range = v
       name          = "subnet-psc-${k}"
       region        = k
     }
-  ]
+  ])
   psa_config = {
     ranges = { for k, v in var.instances :
       "apigee-${k}" => v.psa_ip_cidr_range
     }
-  }*/
+  }
 }
-/*
+
 module "apigee" {
   source       = "../../../modules/apigee"
   project_id   = module.apigee_project.project_id
@@ -51,6 +70,12 @@ module "apigee" {
   envgroups    = var.envgroups
   environments = var.environments
   instances    = var.instances
+  endpoint_attachments = {
+    backend = {
+      region             = var.region
+      service_attachment = google_compute_service_attachment.service_attachment.id
+    }
+  }
   depends_on = [
     module.apigee_vpc
   ]
@@ -127,4 +152,56 @@ module "glb" {
     ip_version            = "IPV4"
     port_range            = null
   }
-}*/
+}
+
+module "apigee_ilb_l7" {
+  source     = "../../../modules/net-ilb-l7"
+  name       = "apigee-ilb"
+  project_id = module.apigee_project.project_id
+  region     = var.region
+  backend_service_configs = {
+    default = {
+      backends = [{
+        balancing_mode = "RATE"
+        group          = "my-neg"
+        max_rate       = { per_endpoint = 1 }
+      }]
+    }
+  }
+  neg_configs = {
+    my-neg = {
+      hybrid = {
+        zone = var.zone
+        endpoints = [{
+          ip_address = module.onprem_ilb_l7.address
+          port       = 80
+        }]
+      }
+    }
+  }
+  health_check_configs = {
+    default = {
+      http = {
+        port = 80
+      }
+    }
+  }
+  vpc_config = {
+    network    = module.apigee_vpc.self_link
+    subnetwork = module.apigee_vpc.subnet_self_links["${var.region}/subnet"]
+  }
+  depends_on = [
+    module.apigee_vpc.subnets_proxy_only
+  ]
+}
+
+resource "google_compute_service_attachment" "service_attachment" {
+  name                  = "service-attachment"
+  project               = module.apigee_project.project_id
+  region                = var.region
+  enable_proxy_protocol = false
+  connection_preference = "ACCEPT_AUTOMATIC"
+  nat_subnets           = [module.apigee_vpc.subnets_psc["${var.region}/subnet-psc-ilb-l7"].self_link]
+  target_service        = module.apigee_ilb_l7.forwarding_rule.id
+}
+
