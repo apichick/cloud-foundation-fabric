@@ -15,7 +15,7 @@
  */
 
  module "apigee_ilb_l7" {
-  source     = "../../../modules/net-ilb-l7"
+  source     = "../../../../modules/net-ilb-l7"
   name       = "apigee-ilb"
   project_id = module.apigee_project.project_id
   region     = var.region
@@ -61,6 +61,6 @@ resource "google_compute_service_attachment" "service_attachment" {
   region                = var.region
   enable_proxy_protocol = false
   connection_preference = "ACCEPT_AUTOMATIC"
-  nat_subnets           = [module.apigee_vpc.subnets_psc["${var.region}/subnet-psc-ilb-l7"].self_link]
+  nat_subnets           = [module.apigee_vpc.subnets_psc["${var.region}/subnet-psc"].self_link]
   target_service        = module.apigee_ilb_l7.forwarding_rule.id
 }

@@ -28,8 +28,8 @@ variable "apigee_proxy_only_subnet_ip_cidr_range" {
 
 variable "apigee_psa_ip_cidr_range" {
   description = "Apigee PSA IP CIDR range."
-  type = string
-  default = "10.0.4.0/22"
+  type        = string
+  default     = "10.0.4.0/22"
 }
 
 variable "apigee_psc_subnet_ip_cidr_range" {
@@ -46,6 +46,11 @@ variable "apigee_subnet_ip_cidr_range" {
 
 variable "billing_account_id" {
   description = "Parameters for the creation of the new project."
+  type        = string
+}
+
+variable "hostname" {
+  description = "Host name"
   type        = string
 }
 
@@ -75,9 +80,11 @@ variable "parent" {
 variable "region" {
   description = "Region."
   type        = string
+  default     = "europe-west1"
 }
 
 variable "zone" {
   description = "Zone."
   type        = string
+  default     = "europe-west1-c"
 }

@@ -20,7 +20,7 @@ locals {
 }
 
 module "apigee_project" {
-  source          = "../../../modules/project"
+  source          = "../../../../modules/project"
   billing_account = var.billing_account_id
   parent          = var.parent
   name            = var.apigee_project_id
@@ -32,7 +32,7 @@ module "apigee_project" {
 }
 
 module "apigee_vpc" {
-  source     = "../../../modules/net-vpc"
+  source     = "../../../../modules/net-vpc"
   project_id = module.apigee_project.project_id
   name       = "vpc"
   subnets_proxy_only = [
@@ -56,12 +56,14 @@ module "apigee_vpc" {
     region        = var.region
   }]
   psa_config = {
-    "apigee" = v.apigee_psa_ip_cidr_range
+    ranges = {
+      "apigee" = var.apigee_psa_ip_cidr_range
+    }
   }
 }
 
 module "apigee" {
-  source     = "../../../modules/apigee"
+  source     = "../../../../modules/apigee"
   project_id = module.apigee_project.project_id
   organization = {
     authorized_network = module.apigee_vpc.network.name
@@ -72,7 +74,7 @@ module "apigee" {
   }
   environments = {
     (local.environment) = {
-      envgroup = local.envgroup
+      envgroups = [local.envgroup]
     }
   }
   instances = {

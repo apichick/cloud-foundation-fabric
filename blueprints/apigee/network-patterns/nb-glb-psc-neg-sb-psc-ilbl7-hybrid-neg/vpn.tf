@@ -15,23 +15,26 @@
  */
 
 module "apigee_vpn" {
-  source        = "../../../modules/net-vpn-ha"
-  project_id    = module.apigee_project.project_id
-  network       = module.apigee_vpc.self_link
-  region        = var.region
-  name          = "vpn"
-  router_create = true
-  router_name   = "router"
-  router_asn    = 64513
-  router_advertise_config = {
-    groups = ["ALL_SUBNETS"]
-    ip_ranges = {
-      "35.191.0.0/16"  = "health checks"
-      "130.211.0.0/22" = "load balancers"
+  source     = "../../../../modules/net-vpn-ha"
+  project_id = module.apigee_project.project_id
+  network    = module.apigee_vpc.self_link
+  region     = var.region
+  name       = "vpn"
+  router_config = {
+    name = "router"
+    asn  = 64513
+    custom_advertise = {
+      all_subnets = true
+      ip_ranges = {
+        "35.191.0.0/16"  = "health checks"
+        "130.211.0.0/22" = "load balancers"
+      }
+      mode = "CUSTOM"
     }
-    mode = "CUSTOM"
   }
-  peer_gcp_gateway = module.onprem_vpn.self_link
+  peer_gateway = {
+    gcp = module.onprem_vpn.self_link
+  }
   tunnels = {
     0 = {
       bgp_peer = {
@@ -63,21 +66,24 @@ module "apigee_vpn" {
 }
 
 module "onprem_vpn" {
-  source        = "../../../modules/net-vpn-ha"
-  project_id    = module.onprem_project.project_id
-  network       = module.onprem_vpc.self_link
-  region        = var.region
-  name          = "vpn"
-  router_create = true
-  router_name   = "router-${var.region}"
-  router_asn    = 64514
-  router_advertise_config = {
-    groups = ["ALL_SUBNETS"]
-    ip_ranges = {
+  source     = "../../../../modules/net-vpn-ha"
+  project_id = module.onprem_project.project_id
+  network    = module.onprem_vpc.self_link
+  region     = var.region
+  name       = "vpn"
+  router_config = {
+    name = "router-${var.region}"
+    asn  = 64514
+    custom_advertise = {
+      all_subnets = true
+      ip_ranges = {
+      }
+      mode = "CUSTOM"
     }
-    mode = "CUSTOM"
   }
-  peer_gcp_gateway = module.apigee_vpn.self_link
+  peer_gateway = {
+    gcp = module.apigee_vpn.self_link
+  }
   tunnels = {
     0 = {
       bgp_peer = {

@@ -15,7 +15,7 @@
  */
 
 module "onprem_project" {
-  source          = "../../../modules/project"
+  source          = "../../../../modules/project"
   billing_account = var.billing_account_id
   parent          = var.parent
   name            = var.onprem_project_id
@@ -25,7 +25,7 @@ module "onprem_project" {
 }
 
 module "onprem_vpc" {
-  source     = "../../../modules/net-vpc"
+  source     = "../../../../modules/net-vpc"
   project_id = module.onprem_project.project_id
   name       = "vpc"
   subnets_proxy_only = [
@@ -46,7 +46,7 @@ module "onprem_vpc" {
 }
 
 module "firewall" {
-  source     = "../../../modules/net-vpc-firewall"
+  source     = "../../../../modules/net-vpc-firewall"
   project_id = module.onprem_project.project_id
   network    = module.onprem_vpc.network.name
   default_rules_config = {
@@ -67,11 +67,11 @@ module "firewall" {
 }
 
 module "cos-nginx" {
-  source = "../../../modules/cloud-config-container/nginx"
+  source = "../../../../modules/cloud-config-container/nginx"
 }
 
 module "instance_template" {
-  source     = "../../../modules/compute-vm"
+  source     = "../../../../modules/compute-vm"
   project_id = module.onprem_project.project_id
   name       = "nginx-template"
   zone       = var.zone
@@ -94,7 +94,7 @@ module "instance_template" {
 }
 
 module "mig" {
-  source            = "../../../modules/compute-mig"
+  source            = "../../../../modules/compute-mig"
   project_id        = module.onprem_project.project_id
   location          = var.region
   name              = "mig"
@@ -116,7 +116,7 @@ module "mig" {
 }
 
 module "onprem_ilb_l7" {
-  source     = "../../../modules/net-ilb-l7"
+  source     = "../../../../modules/net-ilb-l7"
   name       = "ilb"
   project_id = module.onprem_project.project_id
   region     = var.region
