@@ -48,3 +48,8 @@ output "service_attachments" {
   description = "Service attachments."
   value       = { for k, v in google_apigee_instance.instances : k => v.service_attachment }
 }
+
+output "endpoint_hosts" {
+  description = "Endpoint hosts."
+  value       = { for k, v in google_apigee_endpoint_attachment.endpoint_attachments : k => v.host }
+}

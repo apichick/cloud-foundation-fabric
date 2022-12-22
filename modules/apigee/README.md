@@ -180,6 +180,7 @@ module "apigee" {
 
 | name | description | sensitive |
 |---|---|:---:|
+| [endpoint_hosts](outputs.tf#L52) | Endpoint hosts. |  |
 | [envgroups](outputs.tf#L17) | Environment groups. |  |
 | [environments](outputs.tf#L22) | Environment. |  |
 | [instances](outputs.tf#L27) | Instances. |  |
