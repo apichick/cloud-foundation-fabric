@@ -1,0 +1,29 @@
+project_create = {
+  billing_account_id = "011D94-9C86C1-ADD197"
+  parent             = "folders/586929298360"
+}
+project_id = "g-prj-cd-apigee-mr-01"
+envgroups = {
+  test = ["test.cool-demos.space"]
+}
+environments = {
+  apis-test = {
+    envgroups = ["test"]
+  }
+}
+instances = {
+  instance-europe-west-1 = {
+    region            = "europe-west1"
+    environments      = ["apis-test"]
+    psa_ip_cidr_range = "10.0.4.0/22,10.1.0.0/28"
+  },
+  instance-europe-west-4 = {
+    region            = "europe-west4"
+    environments      = ["apis-test"]
+    psa_ip_cidr_range = "10.0.5.0/22,10.1.0.16/28"
+  }
+}
+psc_config = {
+  europe-west1 = "10.0.0.0/28"
+  europe-west4 = "10.0.0.16/28"
+}
