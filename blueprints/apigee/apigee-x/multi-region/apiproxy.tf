@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-module "apigee" {
-  source     = "../../../../modules/apigee"
-  project_id = module.project.project_id
-  organization = merge(var.organization, {
-    authorized_network      = module.vpc.name
-    database_encryption_key = module.database_kms.keys["database-encryption-key"].id
+data "archive_file" "bundle" {
+  type        = "zip"
+  source_dir  = "${path.module}/bundle"
+  output_path = "${path.module}/bundle.zip"
+}
+
+resource "local_file" "deploy_apiproxy_file" {
+  content = templatefile("${path.module}/templates/deploy-apiproxy.sh.tpl", {
+    organization = module.apigee.org_name
   })
-  envgroups    = var.envgroups
-  environments = var.environments
-  instances = { for k, v in var.instances : k => merge(v,
-    { disk_encryption_key = module.disk_kms[k].key_ids["disk-encryption-key"] })
-  }
+  filename        = "${path.module}/deploy-apiproxy.sh"
+  file_permission = "0777"
 }

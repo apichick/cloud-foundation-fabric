@@ -38,13 +38,14 @@ variable "environments" {
 variable "instances" {
   description = "Instance."
   type = map(object({
-    display_name         = optional(string)
-    description          = optional(string)
-    region               = string
-    environments         = list(string)
-    psa_ip_cidr_range    = string
-    disk_encryption_key  = optional(string)
-    consumer_accept_list = optional(list(string))
+    display_name                  = optional(string)
+    description                   = optional(string)
+    region                        = string
+    environments                  = list(string)
+    runtime_ip_cidr_range         = string
+    troubleshooting_ip_cidr_range = string
+    disk_encryption_key           = optional(string)
+    consumer_accept_list          = optional(list(string))
   }))
   nullable = false
 }
@@ -62,7 +63,7 @@ variable "organization" {
   })
   nullable = false
   default = {
-    billing_type = "PAYG"
+    billing_type     = "PAYG"
     analytics_region = "europe-west-1"
   }
 }

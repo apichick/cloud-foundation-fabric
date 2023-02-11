@@ -25,9 +25,14 @@ module "database_kms" {
     }
   }
   keys = { database-encryption-key = null }
+  key_iam = {
+    database-encryption-key = {
+      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.project.service_accounts.robots.apigee}"]
+    }
+  }
 }
 
-module "disks_kms" {
+module "disk_kms" {
   for_each   = var.instances
   source     = "../../../../modules/kms"
   project_id = module.project.project_id
@@ -39,4 +44,9 @@ module "disks_kms" {
     }
   }
   keys = { disk-encryption-key = null }
+  key_iam = {
+    disk-encryption-key = {
+      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.project.service_accounts.robots.apigee}"]
+    }
+  }
 }

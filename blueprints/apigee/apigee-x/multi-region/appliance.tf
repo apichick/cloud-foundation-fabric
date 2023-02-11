@@ -13,17 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-module "apigee" {
-  source     = "../../../../modules/apigee"
-  project_id = module.project.project_id
-  organization = merge(var.organization, {
-    authorized_network      = module.vpc.name
-    database_encryption_key = module.database_kms.keys["database-encryption-key"].id
-  })
-  envgroups    = var.envgroups
-  environments = var.environments
-  instances = { for k, v in var.instances : k => merge(v,
-    { disk_encryption_key = module.disk_kms[k].key_ids["disk-encryption-key"] })
-  }
-}

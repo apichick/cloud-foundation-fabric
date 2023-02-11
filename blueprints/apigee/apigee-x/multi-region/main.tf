@@ -28,7 +28,9 @@ module "project" {
   name           = var.project_id
   services = [
     "apigee.googleapis.com",
+    "cloudkms.googleapis.com",
     "compute.googleapis.com",
+    "monitoring.googleapis.com",
     "servicenetworking.googleapis.com",
   ]
 }

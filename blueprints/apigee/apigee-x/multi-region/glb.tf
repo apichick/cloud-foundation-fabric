@@ -22,16 +22,25 @@ module "glb" {
   use_classic_version = false
   backend_service_configs = {
     default = {
-      backends      = [for k, v in var.instances : { backend = k }]
-      protocol      = "HTTPS"
-      health_checks = []
+      backends = [for k, v in var.instances : { backend = k }]
+      protocol = "HTTPS"
+      health_checks = flatten([ for k1, v1 in var.envgroups : [
+        for v2 in v1: replace("${k1}-${v2}", ".", "-")
+      ]])
     }
   }
-  health_check_configs = {
-    default = {
-      https = { port_specification = "USE_SERVING_PORT" }
+  health_check_configs = merge(flatten([
+    for k1, v1 in var.envgroups : {
+      for v2 in v1: replace("${k1}-${v2}", ".", "-") => {
+        https = {
+          host               = v2
+          port_specification = "USE_SERVING_PORT"
+          request_path       = "/healthz/test"
+          response           = "Server ready"
+        }
+      }
     }
-  }
+  ])...)
   neg_configs = {
     for k, v in var.instances : k => {
       psc = {
