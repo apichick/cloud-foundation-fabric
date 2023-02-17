@@ -4,11 +4,12 @@
     <Response>
       <Step>
         <Name>AM-Response</Name>
+        <Condition>request.method = "GET" AND request.proxy_path = "/ping"</Condition>
       </Step>
     </Response>
   </PostFlow>
   <HTTPProxyConnection>
-    <BasePath>/test</BasePath>
+    <BasePath>/dummy</BasePath>
   </HTTPProxyConnection>
   <RouteRule name="default">
     <TargetEndpoint>default</TargetEndpoint>

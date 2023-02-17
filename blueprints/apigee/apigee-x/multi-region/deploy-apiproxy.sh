@@ -19,7 +19,7 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-ORGANIZATION=g-prj-cd-apigee-mr-01
+ORGANIZATION=g-prj-cd-sb-apigee-srvc-01
 ENVIRONMENT=$1
 
 export TOKEN=$(gcloud auth print-access-token)

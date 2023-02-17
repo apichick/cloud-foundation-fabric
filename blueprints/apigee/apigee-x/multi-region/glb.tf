@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,51 +14,63 @@
  * limitations under the License.
  */
 
+locals {
+  health_check_configs = merge(flatten([
+    for k1, v1 in local.envgroups : {
+      for v2 in v1 : replace(v2, ".", "-") => {
+        enable_logging      = true
+        check_interval_sec  = 6
+        timeout_sec         = 3
+        healthy_threshold   = 10
+        unhealthy_threshold = 3
+        https = {
+          host         = v2
+          port         = 443
+          request_path = "/healthz/ingress"
+          response     = "Apigee Ingress is healthy"
+        }
+  } }])...)
+}
+
 module "glb" {
-  source              = "../../../../modules/net-glb"
-  name                = "glb"
-  project_id          = module.project.project_id
-  protocol            = "HTTPS"
-  use_classic_version = false
+  source     = "../../../../modules/net-glb"
+  project_id = module.host_project.project_id
+  name       = "glb"
+  protocol   = "HTTPS"
   backend_service_configs = {
     default = {
-      backends = [for k, v in var.instances : { backend = k }]
-      protocol = "HTTPS"
-      health_checks = flatten([ for k1, v1 in var.envgroups : [
-        for v2 in v1: replace("${k1}-${v2}", ".", "-")
-      ]])
+      backends = [for k, v in module.nvas :
+        {
+          backend        = "neg-${k}"
+          balancing_mode = "RATE"
+          max_rate       = { per_endpoint = 10 }
+      } if startswith(k, var.active_region)]
+      health_checks = keys(local.health_check_configs)
+      protocol      = "HTTPS"
     }
   }
-  health_check_configs = merge(flatten([
-    for k1, v1 in var.envgroups : {
-      for v2 in v1: replace("${k1}-${v2}", ".", "-") => {
-        https = {
-          host               = v2
-          port_specification = "USE_SERVING_PORT"
-          request_path       = "/healthz/test"
-          response           = "Server ready"
+  health_check_configs = local.health_check_configs
+  neg_configs = { for k, v in module.nvas :
+    "neg-${k}" => {
+      gce = {
+        network    = module.untrusted_vpc.network.id
+        subnetwork = module.untrusted_vpc.subnets["${var.active_region}/subnet-untrusted-${var.active_region}"].id
+        zone       = k
+        endpoints = {
+          e-0 = {
+            instance   = v.instance.name
+            ip_address = v.internal_ip
+            port       = 443
+          }
         }
       }
-    }
-  ])...)
-  neg_configs = {
-    for k, v in var.instances : k => {
-      psc = {
-        region         = v.region
-        target_service = module.apigee.instances[k].service_attachment
-        network        = module.vpc.network.self_link
-        subnetwork = (
-          module.vpc.subnets_psc["${v.region}/subnet-psc-${v.region}"].self_link
-        )
-      }
-    }
+    } if startswith(k, var.active_region)
   }
   ssl_certificates = {
     managed_configs = {
       default = {
-        domains = flatten([for k, v in var.envgroups : v])
+        domains = flatten([for k, v in local.envgroups : v])
       }
     }
   }
-
 }

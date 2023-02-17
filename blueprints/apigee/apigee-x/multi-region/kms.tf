@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 module "database_kms" {
   source     = "../../../../modules/kms"
-  project_id = module.project.project_id
+  project_id = module.service_project.project_id
   keyring    = { location = "global", name = "apigee" }
   key_purpose = {
     database-encryption-key = {
@@ -27,16 +27,16 @@ module "database_kms" {
   keys = { database-encryption-key = null }
   key_iam = {
     database-encryption-key = {
-      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.project.service_accounts.robots.apigee}"]
+      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.service_project.service_accounts.robots.apigee}"]
     }
   }
 }
 
 module "disk_kms" {
-  for_each   = var.instances
+  for_each   = var.network_config
   source     = "../../../../modules/kms"
-  project_id = module.project.project_id
-  keyring    = { location = each.value.region, name = "apigee-${each.value.region}" }
+  project_id = module.service_project.project_id
+  keyring    = { location = each.key, name = "apigee-${each.key}" }
   key_purpose = {
     disk-encryption-key = {
       purpose          = "ENCRYPT_DECRYPT"
@@ -46,7 +46,7 @@ module "disk_kms" {
   keys = { disk-encryption-key = null }
   key_iam = {
     disk-encryption-key = {
-      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.project.service_accounts.robots.apigee}"]
+      "roles/cloudkms.cryptoKeyEncrypterDecrypter" = ["serviceAccount:${module.service_project.service_accounts.robots.apigee}"]
     }
   }
 }

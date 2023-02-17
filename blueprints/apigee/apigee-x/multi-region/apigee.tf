@@ -14,16 +14,39 @@
  * limitations under the License.
  */
 
+locals {
+  organization = {
+    billing_type            = "PAYG"
+    analytics_region        = keys(var.network_config)[0]
+    authorized_network      = module.trusted_vpc.name
+    database_encryption_key = module.database_kms.keys["database-encryption-key"].id
+  }
+  envgroups = {
+    test = [var.hostname]
+  }
+  environments = {
+    apis-test = {
+      envgroups = ["test"]
+    }
+  }
+  instances = { for k, v in var.network_config : "instance-${k}" => {
+    region                        = k
+    environments                  = ["apis-test"]
+    runtime_ip_cidr_range         = v.apigee_runtime_ip_cidr_range
+    troubleshooting_ip_cidr_range = v.apigee_troubleshooting_ip_cidr_range
+    disk_encryption_key           = module.disk_kms[k].key_ids["disk-encryption-key"]
+    }
+  }
+}
+
 module "apigee" {
   source     = "../../../../modules/apigee"
-  project_id = module.project.project_id
-  organization = merge(var.organization, {
-    authorized_network      = module.vpc.name
+  project_id = module.service_project.project_id
+  organization = merge(local.organization, {
+    authorized_network      = module.trusted_vpc.network.id
     database_encryption_key = module.database_kms.keys["database-encryption-key"].id
   })
-  envgroups    = var.envgroups
-  environments = var.environments
-  instances = { for k, v in var.instances : k => merge(v,
-    { disk_encryption_key = module.disk_kms[k].key_ids["disk-encryption-key"] })
-  }
+  envgroups    = local.envgroups
+  environments = local.environments
+  instances    = local.instances
 }

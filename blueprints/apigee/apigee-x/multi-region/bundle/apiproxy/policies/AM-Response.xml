@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<AssignMessage continueOnError="false" enabled="true" name="remove-1">
+<AssignMessage continueOnError="false" enabled="true" name="AM-Response">
   <Add>
     <Payload>{
     "region": {system.region.name}

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,38 @@
  * limitations under the License.
  */
 
-module "project" {
-  source = "../../../../modules/project"
-  billing_account = (var.project_create != null
-    ? var.project_create.billing_account_id
-    : null
-  )
-  parent = (var.project_create != null
-    ? var.project_create.parent
-    : null
-  )
-  project_create = var.project_create != null
-  name           = var.project_id
+
+module "host_project" {
+  source          = "../../../../modules/project"
+  parent          = var.parent
+  billing_account = var.billing_account_id
+  name            = var.host_project_id
+  shared_vpc_host_config = {
+    enabled = true
+  }
+  services = [
+    "compute.googleapis.com",
+    "servicenetworking.googleapis.com",
+    "monitoring.googleapis.com"
+  ]
+  iam = {
+    "roles/pubsub.publisher" = ["serviceAccount:${module.host_project.service_accounts.robots.monitoring-notifications}"]
+  }
+}
+
+module "service_project" {
+  source          = "../../../../modules/project"
+  parent          = var.parent
+  billing_account = var.billing_account_id
+  name            = var.service_project_id
   services = [
     "apigee.googleapis.com",
     "cloudkms.googleapis.com",
     "compute.googleapis.com",
-    "monitoring.googleapis.com",
-    "servicenetworking.googleapis.com",
+    "servicenetworking.googleapis.com"
   ]
+  shared_vpc_service_config = {
+    attach       = true
+    host_project = module.host_project.project_id
+  }
 }

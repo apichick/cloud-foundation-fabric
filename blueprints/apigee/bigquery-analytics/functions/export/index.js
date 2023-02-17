@@ -85,10 +85,13 @@ async function scheduleAnalyticsExport(org, env, token, startDate, endDate) {
 }
 
 functions.cloudEvent("export", async (cloudEvent) => {
-  const today = new Date();
-  const endDate = formatDate(today);
-  const yesterday = new Date(today.setDate(today.getDate() - 1));
+  //const today = new Date();
+  //const endDate = formatDate(today);
+  //const yesterday = new Date(today.setDate(today.getDate() - 1));
+  const yesterday = new Date();
+  const today = new Date(yesterday.setDate(yesterday.getDate() +1));
   const startDate = formatDate(yesterday);
+  const endDate = formatDate(today); 
   const token = await getAccessToken();
   try {
     for(let i = 0; i < ENVIRONMENTS.length; i++) {
