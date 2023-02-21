@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <AssignMessage continueOnError="false" enabled="true" name="AM-Response">
-  <Add>
+  <AssignTo createNew="false" transport="http" type="response" />
+  <IgnoreUnresolvedVariables>false</IgnoreUnresolvedVariables>
+  <Set>
     <Payload>{
-    "region": {system.region.name}
+      "region": {system.region.name}
 }</Payload>
-  </Add>
-  <AssignTo createNew="false" transport="http" type="response"/>
+  </Set>
 </AssignMessage>

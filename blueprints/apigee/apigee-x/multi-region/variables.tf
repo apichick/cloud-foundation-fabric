@@ -38,9 +38,12 @@ variable "host_project_id" {
   nullable    = false
 }
 
-variable "hostname" {
-  description = "Host name"
-  type        = string
+variable "hostnames" {
+  description = "Test host name"
+  type = object({
+    test = string
+    prod = string
+  })
 }
 
 variable "network_config" {

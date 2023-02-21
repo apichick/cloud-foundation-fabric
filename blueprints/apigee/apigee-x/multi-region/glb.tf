@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-locals {
-  health_check_configs = merge(flatten([
-    for k1, v1 in local.envgroups : {
-      for v2 in v1 : replace(v2, ".", "-") => {
-        enable_logging      = true
-        check_interval_sec  = 6
-        timeout_sec         = 3
-        healthy_threshold   = 10
-        unhealthy_threshold = 3
-        https = {
-          host         = v2
-          port         = 443
-          request_path = "/healthz/ingress"
-          response     = "Apigee Ingress is healthy"
-        }
-  } }])...)
-}
-
 module "glb" {
   source     = "../../../../modules/net-glb"
   project_id = module.host_project.project_id
@@ -45,11 +27,24 @@ module "glb" {
           balancing_mode = "RATE"
           max_rate       = { per_endpoint = 10 }
       } if startswith(k, var.active_region)]
-      health_checks = keys(local.health_check_configs)
       protocol      = "HTTPS"
+      health_checks = ["default"]
     }
   }
-  health_check_configs = local.health_check_configs
+  health_check_configs = {
+    default = {
+      enable_logging      = true
+      check_interval_sec  = 6
+      timeout_sec         = 3
+      healthy_threshold   = 10
+      unhealthy_threshold = 3
+      https = {
+        port         = 443
+        request_path = "/healthz/ingress"
+        response     = "Apigee Ingress is healthy"
+      }
+    }
+  }
   neg_configs = { for k, v in module.nvas :
     "neg-${k}" => {
       gce = {

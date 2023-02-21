@@ -25,11 +25,19 @@ module "untrusted_vpc" {
       region        = k
     }
   ]
- routes = { for k, v in var.network_config :  "to-trusted-${k}" =>
-    {
-      dest_range    = v.trusted_subnet_ip_cidr_range
+  routes = {
+    nva = {
+      dest_range = "0.0.0.0/0"
+      next_hop_type = "gateway"
+      next_hop = "default-internet-gateway"
+      priority = 599
+      tags = ["nva"]
+    }
+    default = {
+      dest_range    = "0.0.0.0/0"
       next_hop_type = "ilb"
-      next_hop      = module.ilb_nva_untrusted[k].forwarding_rule.self_link
+      next_hop      = module.ilb_nva_untrusted[var.active_region].forwarding_rule.self_link
+      priority = 600
     }
   }
 }
@@ -55,11 +63,12 @@ module "trusted_vpc" {
       region        = k
     }
   ]
-  routes = { for k, v in var.network_config : "to-untrusted-${k}" =>
-    {
+  routes = {
+    default = {
       dest_range    = "0.0.0.0/0"
       next_hop_type = "ilb"
-      next_hop      = module.ilb_nva_trusted[k].forwarding_rule.self_link
+      next_hop      = module.ilb_nva_trusted[var.active_region].forwarding_rule.self_link
+      priority      = 600
     }
   }
   psa_config = {

@@ -22,16 +22,20 @@ locals {
     database_encryption_key = module.database_kms.keys["database-encryption-key"].id
   }
   envgroups = {
-    test = [var.hostname]
+    test = [var.hostnames.test]
+    prod = [var.hostnames.prod]
   }
   environments = {
     apis-test = {
       envgroups = ["test"]
     }
+    apis-prod = {
+      envgroups = ["prod"]
+    }
   }
   instances = { for k, v in var.network_config : "instance-${k}" => {
     region                        = k
-    environments                  = ["apis-test"]
+    environments                  = ["apis-test", "apis-prod"]
     runtime_ip_cidr_range         = v.apigee_runtime_ip_cidr_range
     troubleshooting_ip_cidr_range = v.apigee_troubleshooting_ip_cidr_range
     disk_encryption_key           = module.disk_kms[k].key_ids["disk-encryption-key"]

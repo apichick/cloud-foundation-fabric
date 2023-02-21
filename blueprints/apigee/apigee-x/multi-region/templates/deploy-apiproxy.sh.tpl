@@ -24,12 +24,15 @@ ENVIRONMENT=$1
 
 export TOKEN=$(gcloud auth print-access-token)
 
-curl -v -X POST \
+REVISION=$(curl -v -X POST \
 -H "Authorization: Bearer $TOKEN" \
 -H "Content-Type:application/octet-stream" \
 -T 'bundle.zip' \
-"https://apigee.googleapis.com/v1/organizations/$ORGANIZATION/apis?name=test&action=import"
+"https://apigee.googleapis.com/v1/organizations/$ORGANIZATION/apis?name=test&action=import" \
+| jq -r '.revision')
+
 
 curl -v -X POST \
 -H "Authorization: Bearer $TOKEN" \
-"https://apigee.googleapis.com/v1/organizations/$ORGANIZATION/environments/$ENVIRONMENT/apis/test/revisions/1/deployments"
+-d "override=true" \
+"https://apigee.googleapis.com/v1/organizations/$ORGANIZATION/environments/$ENVIRONMENT/apis/test/revisions/$REVISION/deployments"

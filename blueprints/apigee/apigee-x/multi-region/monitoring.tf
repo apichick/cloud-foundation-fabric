@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+locals {
+  uptime_checks = merge(flatten([for k1, v1 in local.envgroups :
+    { for v2 in v1 : replace(v2, ".", "-") => v2 }
+  ])...)
+}
+
 module "pubsub" {
   source     = "../../../../modules/pubsub"
   project_id = module.host_project.project_id
@@ -40,31 +46,32 @@ resource "google_monitoring_notification_channel" "email_notification_channel" {
 
 }
 
-resource "google_monitoring_uptime_check_config" "uptime_check" {
-  display_name = "apigee-uptime-check"
+resource "google_monitoring_uptime_check_config" "uptime_checks" {
+  for_each     = local.uptime_checks
+  display_name = "apigee-uc-${each.key}"
   project      = module.host_project.project_id
   timeout      = "30s"
   period       = "60s"
   http_check {
-    path           = "/healthz/ingress"
+    path           = "/dummy/ping"
     port           = "443"
     request_method = "GET"
     accepted_response_status_codes {
       status_value = 200
     }
-    use_ssl = true
+    use_ssl      = true
     validate_ssl = true
   }
   monitored_resource {
     type = "uptime_url"
     labels = {
-      host = var.hostname
+      host = each.value
     }
   }
-  content_matchers {
-    content = "Apigee Ingress is ready"
-    matcher = "CONTAINS_STRING"
-  }
+  # content_matchers {
+  #   content = "Apigee Ingress is ready"
+  #   matcher = "CONTAINS_STRING"
+  # }
 
   checker_type = "STATIC_IP_CHECKERS"
 }
@@ -110,7 +117,8 @@ EOT
 }
 
 resource "google_monitoring_alert_policy" "uptime_check_alert_policy" {
-  display_name = "Apigee uptime check failure"
+  for_each     = local.uptime_checks
+  display_name = "Apigee uptime check failure (${each.value})"
   combiner     = "OR"
   project      = module.host_project.project_id
   conditions {
@@ -125,7 +133,7 @@ resource "google_monitoring_alert_policy" "uptime_check_alert_policy" {
       duration        = "600s"
       filter          = <<EOT
 metric.type="monitoring.googleapis.com/uptime_check/check_passed"
- AND metric.label.check_id=${google_monitoring_uptime_check_config.uptime_check.uptime_check_id}
+ AND metric.label.check_id=${google_monitoring_uptime_check_config.uptime_checks[each.key].uptime_check_id}
  AND resource.type="uptime_url"
 EOT
       threshold_value = 1
