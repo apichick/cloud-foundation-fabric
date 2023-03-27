@@ -54,3 +54,8 @@ blueprints/gke/autopilot/ansible/vars/vars.yaml
 blueprints/gke/autopilot/bundle/monitoring/kustomization.yaml
 blueprints/gke/autopilot/bundle/locust/kustomization.yaml
 blueprints/gke/autopilot/bundle.tar.gz
+blueprints/gke/hpc/ansible/gssh.sh
+blueprints/gke/hpc/ansible/vars/vars.yaml
+blueprints/gke/hpc/bundle/app/images/video-download-api/job.xml
+blueprints/gke/hpc/bundle/app/images/video-downloader-creator/job.xml
+blueprints/gke/hpc/bundle.tar.gz

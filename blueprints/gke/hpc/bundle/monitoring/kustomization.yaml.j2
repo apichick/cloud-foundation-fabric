@@ -1,0 +1,48 @@
+namespace: monitoring
+resources:
+  - namespace.yaml
+  - frontend.yaml
+  - grafana.yaml
+configMapGenerator:
+- name: k8s-grafana-dashboards
+  options:
+    disableNameSuffixHash: true
+  files:
+  - dashboards/k8s-global.json
+  - dashboards/k8s-namespaces.json
+  - dashboards/k8s-nodes.json
+  - dashboards/k8s-pods.json
+- name: kueue-grafana-dashboards
+  options:
+    disableNameSuffixHash: true
+  files:
+  - dashboards/kueue.json
+patches:
+  - target:
+      version: v1
+      kind: ServiceAccount
+      name: frontend
+      namespace: monitoring
+    patch: |-
+      - op: add
+        path: /metadata/annotations/iam.gke.io~1gcp-service-account
+        value: monitoring@{{ project_id }}.iam.gserviceaccount.com
+  - target:
+      version: v1
+      kind: ServiceAccount
+      name: custom-metrics-stackdriver-adapter
+      namespace: monitoring
+    patch: |-
+      - op: add
+        path: /metadata/annotations/iam.gke.io~1gcp-service-account
+        value: monitoring@{{ project_id }}.iam.gserviceaccount.com        
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: frontend
+      namespace: monitoring
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: "--query.project-id={{ project_id }}"  

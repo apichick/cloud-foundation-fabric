@@ -1,0 +1,2 @@
+internetarchive==3.3.0
+google-cloud-storage==2.8.0

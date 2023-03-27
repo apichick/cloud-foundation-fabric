@@ -1,0 +1,4 @@
+resources:
+  - kueue.yaml
+  - resource-flavour.yaml
+  - cluster-queue.yaml

@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: video-downloader-creator-job-
+  namespace: video
+  annotations:
+    kueue.x-k8s.io/queue-name: video-downloader-creator-queue
+spec:
+  parallelism: 1
+  completions: 1
+  suspend: true
+  template:
+    spec:
+      serviceAccountName: video-downloader-creator-service-account
+      automountServiceAccountToken: true        
+      containers:
+      - name: video-downloader-creator
+        image: {{ region }}-docker.pkg.dev/{{ project_id }}/registry/video-downloader-creator:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 250m
+            memory: 250Mi
+        env:
+          - name: BUCKET
+            value: $bucket
+          - name: COLLECTION
+            value: $collection
+          - name: FORMAT
+            value: $format
+      restartPolicy: Never
