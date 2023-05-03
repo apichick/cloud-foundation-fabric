@@ -10,13 +10,13 @@ The diagram below depicts the architecture.
 
 1. Clone this repository or [open it in cloud shell](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2Fterraform-google-modules%2Fcloud-foundation-fabric&cloudshell_print=cloud-shell-readme.txt&cloudshell_working_dir=blueprints%2Fgke%2Fautopilot), then go through the following steps to create resources:
 
-2. Initialize the terraform configuration
+2. Initialize the terraform configuration.
 
     ```
     terraform init
     ```
 
-3. Apply the terraform configuration
+3. Apply the terraform configuration.
 
     ```
     terraform apply -var project_id=my-project-id
@@ -24,19 +24,19 @@ The diagram below depicts the architecture.
 
 4. Copy the IP addresses for grafana, the locust master.    
 
-4. Change to the ansible directory and run the following command
+4. Change to the ansible directory and run the following command:
 
     ```
     ansible-playbook -v playbook.yaml
     ```
 
-5. Open to the locust master web interface url in your browser and start the load test
+5. Open to the locust master web interface url in your browser and start the load test.
 
 
 6. SSH to the management VM
 
     ```
-    gcloud compute ssh mgmt --project my-project
+    gcloud compute ssh mgmt --project my-project --zone ZONE
     ```
 
 7. Run the following command to check that the application pods are running on different nodes than the load testing and monitoring tooling.
@@ -54,7 +54,7 @@ The diagram below depicts the architecture.
 9. Run the following command to see how the cluster nodes scale
 
     ```
-    kubectl get nodes -n
+    kubectl get nodes -w
     ```
 
 Alternatively you can also check all the above using the dashboards available in grafana.
