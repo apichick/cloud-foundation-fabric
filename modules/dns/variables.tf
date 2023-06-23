@@ -22,7 +22,6 @@ variable "client_networks" {
   description = "List of VPC self links that can see this zone."
   type        = list(string)
   default     = []
-  nullable    = false
 }
 
 variable "description" {
@@ -54,6 +53,7 @@ variable "dnssec_config" {
 variable "domain" {
   description = "Zone domain, must end with a period."
   type        = string
+  default     = null
 }
 
 variable "enable_logging" {

@@ -107,7 +107,7 @@ resource "google_dns_managed_zone" "non-public" {
   }
 
   dynamic "private_visibility_config" {
-    for_each = length(var.client_networks) > 0 ? [""] : []
+    for_each = length(coalesce(var.client_networks, [])) > 0 ? [""] : []
     content {
       dynamic "networks" {
         for_each = var.client_networks
