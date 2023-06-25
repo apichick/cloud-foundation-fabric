@@ -14,8 +14,10 @@ module "private-dns" {
   project_id      = "myproject"
   type            = "private"
   name            = "test-example"
-  domain          = "test.example."
-  client_networks = [var.vpc.self_link]
+  zone_config     = {
+    domain          = "test.example."
+    client_networks = [var.vpc.self_link]
+  }
   recordsets = {
     "A localhost" = { records = ["127.0.0.1"] }
     "A myhost"    = { ttl = 600, records = ["10.0.0.120"] }
@@ -35,8 +37,10 @@ module "private-dns" {
   project_id      = "myproject"
   type            = "forwarding"
   name            = "test-example"
-  domain          = "test.example."
-  client_networks = [var.vpc.self_link]
+  zone_config     = {
+    domain          = "test.example."
+    client_networks = [var.vpc.self_link]
+  }
   forwarders      = { "10.0.1.1" = null, "1.2.3.4" = "private" }
 }
 # tftest modules=1 resources=1 inventory=forwarding-zone.yaml
@@ -50,9 +54,11 @@ module "private-dns" {
   project_id      = "myproject"
   type            = "peering"
   name            = "test-example"
-  domain          = "."
+  zone_config     = {
+    domain          = "."
+    client_networks = [var.vpc.self_link]
+  }
   description     = "Forwarding zone for ."
-  client_networks = [var.vpc.self_link]
   peer_network    = var.vpc2.self_link
 }
 # tftest modules=1 resources=1 inventory=peering-zone.yaml
@@ -66,8 +72,10 @@ module "private-dns" {
   project_id      = "myproject"
   type            = "private"
   name            = "test-example"
-  domain          = "test.example."
-  client_networks = [var.vpc.self_link]
+  zone_config     = {
+    domain          = "test.example."
+    client_networks = [var.vpc.self_link]
+  }
   recordsets = {
     "A regular" = { records = ["10.20.0.1"] }
     "A geo" = {
@@ -99,8 +107,10 @@ module "private-dns" {
   project_id      = "myproject"
   type            = "reverse-managed"
   name            = "test-example"
-  domain          = "0.0.10.in-addr.arpa."
-  client_networks = [var.vpc.self_link]
+  zone_config = {
+    domain          = "0.0.10.in-addr.arpa."
+    client_networks = [var.vpc.self_link]
+  }
 }
 # tftest modules=1 resources=1 inventory=reverse-zone.yaml
 ```
@@ -109,11 +119,13 @@ module "private-dns" {
 
 ```hcl
 module "public-dns" {
-  source     = "./fabric/modules/dns"
-  project_id = "myproject"
-  type       = "public"
-  name       = "example"
-  domain     = "example.com."
+  source      = "./fabric/modules/dns"
+  project_id  = "myproject"
+  type        = "public"
+  name        = "example"
+  zone_config = {
+    domain = "example.com."
+  }
   recordsets = {
     "A myhost" = { ttl = 300, records = ["127.0.0.1"] }
   }
@@ -123,6 +135,22 @@ module "public-dns" {
 }
 # tftest modules=1 resources=4 inventory=public-zone.yaml
 ```
+
+### Add records to an existing zone
+
+```hcl
+module "public-dns" {
+  source      = "./fabric/modules/dns"
+  project_id  = "myproject"
+  type        = "public"
+  name        = "example"
+  recordsets = {
+    "A myhost" = { ttl = 300, records = ["127.0.0.1"] }
+  }
+}
+# tftest modules=1 resources=1 inventory=records.yaml
+```
+
 <!-- BEGIN TFDOC -->
 
 ## Variables

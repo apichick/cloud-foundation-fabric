@@ -16,6 +16,7 @@
 
 locals {
   # split record name and type and set as keys in a map
+  domain = var.zone_config != null ? var.zone_config.domain: data.google_dns_managed_zone.public.dns_name
   _recordsets_0 = {
     for key, attrs in var.recordsets :
     key => merge(attrs, zipmap(["type", "name"], split(" ", key)))
@@ -26,14 +27,14 @@ locals {
     key => merge(attrs, {
       resource_name = (
         attrs.name == ""
-        ? var.domain
+        ? local.domain
         : (
           substr(attrs.name, -1, 1) == "."
           ? attrs.name
-          : "${attrs.name}.${var.domain}"
+          : "${attrs.name}.${local.domain}"
         )
       )
-    })
+    })    
   }
   # split recordsets between regular, geo and wrr
   geo_recordsets = {
@@ -52,13 +53,13 @@ locals {
     if v.wrr_routing != null
   }
   zone = (
-    var.zone_create
-    ? try(
+    var.zone_config == null
+    ? try(data.google_dns_managed_zone.public.0, null) 
+    : try(
       google_dns_managed_zone.non-public.0, try(
         google_dns_managed_zone.public.0, null
       )
     )
-    : try(data.google_dns_managed_zone.public.0, null)
   )
   dns_keys = try(
     data.google_dns_keys.dns_keys.0, null
@@ -66,11 +67,11 @@ locals {
 }
 
 resource "google_dns_managed_zone" "non-public" {
-  count          = (var.zone_create && var.type != "public") ? 1 : 0
+  count          = (var.zone_config != null && var.type != "public") ? 1 : 0
   provider       = google-beta
   project        = var.project_id
   name           = var.name
-  dns_name       = var.domain
+  dns_name       = local.domain
   description    = var.description
   visibility     = "private"
   reverse_lookup = (var.type == "reverse-managed")
@@ -137,16 +138,16 @@ resource "google_dns_managed_zone" "non-public" {
 }
 
 data "google_dns_managed_zone" "public" {
-  count   = var.zone_create ? 0 : 1
+  count   = var.zone_config == null ? 1 : 0
   project = var.project_id
   name    = var.name
 }
 
 resource "google_dns_managed_zone" "public" {
-  count       = (var.zone_create && var.type == "public") ? 1 : 0
+  count       = (var.zone_config != null && var.type == "public") ? 1 : 0
   project     = var.project_id
   name        = var.name
-  dns_name    = var.domain
+  dns_name    = local.domain
   description = var.description
   visibility  = "public"
 
@@ -189,7 +190,7 @@ resource "google_dns_managed_zone_iam_binding" "iam_bindings" {
 }
 
 data "google_dns_keys" "dns_keys" {
-  count        = var.zone_create && (var.dnssec_config == {} || var.type != "public") ? 0 : 1
+  count        = var.zone_config != null && (var.dnssec_config == {} || var.type != "public") ? 0 : 1
   managed_zone = local.zone.id
 }
 

@@ -18,12 +18,6 @@
 #                                zone variables                               #
 ###############################################################################
 
-variable "client_networks" {
-  description = "List of VPC self links that can see this zone."
-  type        = list(string)
-  default     = []
-}
-
 variable "description" {
   description = "Domain description."
   type        = string
@@ -50,12 +44,6 @@ variable "dnssec_config" {
   nullable = false
 }
 
-variable "domain" {
-  description = "Zone domain, must end with a period."
-  type        = string
-  default     = null
-}
-
 variable "enable_logging" {
   description = "Enable query logging for this zone."
   type        = bool
@@ -78,12 +66,6 @@ variable "iam" {
 variable "name" {
   description = "Zone name, must be unique within the project."
   type        = string
-}
-
-variable "peer_network" {
-  description = "Peering network self link, only valid for 'peering' zone types."
-  type        = string
-  default     = null
 }
 
 variable "project_id" {
@@ -142,10 +124,14 @@ variable "type" {
   }
 }
 
-variable "zone_create" {
-  description = "Create zone. When set to false, uses a data source to reference existing zone."
-  type        = bool
-  default     = true
+variable "zone_config" {
+  description = "Configuration of the zone."
+  type        = object({
+    domain = string
+    client_networks = optional(list(string))
+    peer_network = optional(string)
+  })
+  default = null
 }
 
 
