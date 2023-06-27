@@ -16,7 +16,9 @@
 
 locals {
   # split record name and type and set as keys in a map
-  domain = var.zone_config != null ? var.zone_config.domain: data.google_dns_managed_zone.public.dns_name
+  domain = (var.zone_config != null ? 
+  var.zone_config.domain: 
+  data.google_dns_managed_zone.public[0].dns_name)
   _recordsets_0 = {
     for key, attrs in var.recordsets :
     key => merge(attrs, zipmap(["type", "name"], split(" ", key)))
@@ -98,7 +100,7 @@ resource "google_dns_managed_zone" "non-public" {
 
   dynamic "peering_config" {
     for_each = (
-      var.type == "peering" && var.peer_network != null ? [""] : []
+      var.type == "peering" && try(var.zone_config.peer_network,null) != null ? [""] : []
     )
     content {
       target_network {
@@ -108,7 +110,7 @@ resource "google_dns_managed_zone" "non-public" {
   }
 
   dynamic "private_visibility_config" {
-    for_each = length(coalesce(var.client_networks, [])) > 0 ? [""] : []
+    for_each = length(try(var.zone_config.client_networks, [])) > 0 ? [""] : []
     content {
       dynamic "networks" {
         for_each = var.client_networks

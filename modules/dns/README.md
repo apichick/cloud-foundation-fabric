@@ -150,27 +150,23 @@ module "public-dns" {
 }
 # tftest modules=1 resources=1 inventory=records.yaml
 ```
-
 <!-- BEGIN TFDOC -->
 
 ## Variables
 
 | name | description | type | required | default |
 |---|---|:---:|:---:|:---:|
-| [domain](variables.tf#L54) | Zone domain, must end with a period. | <code>string</code> | ✓ |  |
-| [name](variables.tf#L78) | Zone name, must be unique within the project. | <code>string</code> | ✓ |  |
-| [project_id](variables.tf#L89) | Project id for the zone. | <code>string</code> | ✓ |  |
-| [client_networks](variables.tf#L21) | List of VPC self links that can see this zone. | <code>list&#40;string&#41;</code> |  | <code>&#91;&#93;</code> |
-| [description](variables.tf#L28) | Domain description. | <code>string</code> |  | <code>&#34;Terraform managed.&#34;</code> |
-| [dnssec_config](variables.tf#L34) | DNSSEC configuration for this zone. | <code title="object&#40;&#123;&#10;  non_existence &#61; optional&#40;string, &#34;nsec3&#34;&#41;&#10;  state         &#61; string&#10;  key_signing_key &#61; optional&#40;object&#40;&#10;    &#123; algorithm &#61; string, key_length &#61; number &#125;&#41;,&#10;    &#123; algorithm &#61; &#34;rsasha256&#34;, key_length &#61; 2048 &#125;&#10;  &#41;&#10;  zone_signing_key &#61; optional&#40;object&#40;&#10;    &#123; algorithm &#61; string, key_length &#61; number &#125;&#41;,&#10;    &#123; algorithm &#61; &#34;rsasha256&#34;, key_length &#61; 1024 &#125;&#10;  &#41;&#10;&#125;&#41;">object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code title="&#123;&#10;  state &#61; &#34;off&#34;&#10;&#125;">&#123;&#8230;&#125;</code> |
-| [enable_logging](variables.tf#L59) | Enable query logging for this zone. | <code>bool</code> |  | <code>false</code> |
-| [forwarders](variables.tf#L66) | Map of {IPV4_ADDRESS => FORWARDING_PATH} for 'forwarding' zone types. Path can be 'default', 'private', or null for provider default. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
-| [iam](variables.tf#L72) | IAM bindings in {ROLE => [MEMBERS]} format. | <code>map&#40;list&#40;string&#41;&#41;</code> |  | <code>null</code> |
-| [peer_network](variables.tf#L83) | Peering network self link, only valid for 'peering' zone types. | <code>string</code> |  | <code>null</code> |
-| [recordsets](variables.tf#L94) | Map of DNS recordsets in \"type name\" => {ttl, [records]} format. | <code title="map&#40;object&#40;&#123;&#10;  ttl     &#61; optional&#40;number, 300&#41;&#10;  records &#61; optional&#40;list&#40;string&#41;&#41;&#10;  geo_routing &#61; optional&#40;list&#40;object&#40;&#123;&#10;    location &#61; string&#10;    records  &#61; list&#40;string&#41;&#10;  &#125;&#41;&#41;&#41;&#10;  wrr_routing &#61; optional&#40;list&#40;object&#40;&#123;&#10;    weight  &#61; number&#10;    records &#61; list&#40;string&#41;&#10;  &#125;&#41;&#41;&#41;&#10;&#125;&#41;&#41;">map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [service_directory_namespace](variables.tf#L129) | Service directory namespace id (URL), only valid for 'service-directory' zone types. | <code>string</code> |  | <code>null</code> |
-| [type](variables.tf#L135) | Type of zone to create, valid values are 'public', 'private', 'forwarding', 'peering', 'service-directory','reverse-managed'. | <code>string</code> |  | <code>&#34;private&#34;</code> |
-| [zone_create](variables.tf#L145) | Create zone. When set to false, uses a data source to reference existing zone. | <code>bool</code> |  | <code>true</code> |
+| [name](variables.tf#L66) | Zone name, must be unique within the project. | <code>string</code> | ✓ |  |
+| [project_id](variables.tf#L71) | Project id for the zone. | <code>string</code> | ✓ |  |
+| [description](variables.tf#L21) | Domain description. | <code>string</code> |  | <code>&#34;Terraform managed.&#34;</code> |
+| [dnssec_config](variables.tf#L27) | DNSSEC configuration for this zone. | <code title="object&#40;&#123;&#10;  non_existence &#61; optional&#40;string, &#34;nsec3&#34;&#41;&#10;  state         &#61; string&#10;  key_signing_key &#61; optional&#40;object&#40;&#10;    &#123; algorithm &#61; string, key_length &#61; number &#125;&#41;,&#10;    &#123; algorithm &#61; &#34;rsasha256&#34;, key_length &#61; 2048 &#125;&#10;  &#41;&#10;  zone_signing_key &#61; optional&#40;object&#40;&#10;    &#123; algorithm &#61; string, key_length &#61; number &#125;&#41;,&#10;    &#123; algorithm &#61; &#34;rsasha256&#34;, key_length &#61; 1024 &#125;&#10;  &#41;&#10;&#125;&#41;">object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code title="&#123;&#10;  state &#61; &#34;off&#34;&#10;&#125;">&#123;&#8230;&#125;</code> |
+| [enable_logging](variables.tf#L47) | Enable query logging for this zone. | <code>bool</code> |  | <code>false</code> |
+| [forwarders](variables.tf#L54) | Map of {IPV4_ADDRESS => FORWARDING_PATH} for 'forwarding' zone types. Path can be 'default', 'private', or null for provider default. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
+| [iam](variables.tf#L60) | IAM bindings in {ROLE => [MEMBERS]} format. | <code>map&#40;list&#40;string&#41;&#41;</code> |  | <code>null</code> |
+| [recordsets](variables.tf#L76) | Map of DNS recordsets in \"type name\" => {ttl, [records]} format. | <code title="map&#40;object&#40;&#123;&#10;  ttl     &#61; optional&#40;number, 300&#41;&#10;  records &#61; optional&#40;list&#40;string&#41;&#41;&#10;  geo_routing &#61; optional&#40;list&#40;object&#40;&#123;&#10;    location &#61; string&#10;    records  &#61; list&#40;string&#41;&#10;  &#125;&#41;&#41;&#41;&#10;  wrr_routing &#61; optional&#40;list&#40;object&#40;&#123;&#10;    weight  &#61; number&#10;    records &#61; list&#40;string&#41;&#10;  &#125;&#41;&#41;&#41;&#10;&#125;&#41;&#41;">map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [service_directory_namespace](variables.tf#L111) | Service directory namespace id (URL), only valid for 'service-directory' zone types. | <code>string</code> |  | <code>null</code> |
+| [type](variables.tf#L117) | Type of zone to create, valid values are 'public', 'private', 'forwarding', 'peering', 'service-directory','reverse-managed'. | <code>string</code> |  | <code>&#34;private&#34;</code> |
+| [zone_config](variables.tf#L127) | Configuration of the zone. | <code title="object&#40;&#123;&#10;  domain &#61; string&#10;  client_networks &#61; optional&#40;list&#40;string&#41;&#41;&#10;  peer_network &#61; optional&#40;string&#41;&#10;&#125;&#41;">object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>null</code> |
 
 ## Outputs
 
