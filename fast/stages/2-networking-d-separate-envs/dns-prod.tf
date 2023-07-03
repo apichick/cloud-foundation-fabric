@@ -19,12 +19,14 @@
 # GCP-specific environment zone
 
 module "prod-dns-private-zone" {
-  source          = "../../../modules/dns"
-  project_id      = module.prod-spoke-project.project_id
-  type            = "private"
-  name            = "prod-gcp-example-com"
-  domain          = "prod.gcp.example.com."
-  client_networks = [module.prod-spoke-vpc.self_link]
+  source     = "../../../modules/dns"
+  project_id = module.prod-spoke-project.project_id
+  type       = "private"
+  name       = "prod-gcp-example-com"
+  zone_config = {
+    domain          = "prod.gcp.example.com."
+    client_networks = [module.prod-spoke-vpc.self_link]
+  }
   recordsets = {
     "A localhost" = { records = ["127.0.0.1"] }
   }
@@ -36,13 +38,15 @@ moved {
 }
 
 module "prod-dns-fwd-onprem-example" {
-  source          = "../../../modules/dns"
-  project_id      = module.prod-spoke-project.project_id
-  type            = "forwarding"
-  name            = "example-com"
-  domain          = "onprem.example.com."
-  client_networks = [module.prod-spoke-vpc.self_link]
-  forwarders      = { for ip in var.dns.prod : ip => null }
+  source     = "../../../modules/dns"
+  project_id = module.prod-spoke-project.project_id
+  type       = "forwarding"
+  name       = "example-com"
+  zone_config = {
+    domain          = "onprem.example.com."
+    client_networks = [module.prod-spoke-vpc.self_link]
+    forwarders      = { for ip in var.dns.prod : ip => null }
+  }
 }
 
 moved {
@@ -51,13 +55,15 @@ moved {
 }
 
 module "prod-dns-fwd-onprem-rev-10" {
-  source          = "../../../modules/dns"
-  project_id      = module.prod-spoke-project.project_id
-  type            = "forwarding"
-  name            = "root-reverse-10"
-  domain          = "10.in-addr.arpa."
-  client_networks = [module.prod-spoke-vpc.self_link]
-  forwarders      = { for ip in var.dns.prod : ip => null }
+  source     = "../../../modules/dns"
+  project_id = module.prod-spoke-project.project_id
+  type       = "forwarding"
+  name       = "root-reverse-10"
+  zone_config = {
+    domain          = "10.in-addr.arpa."
+    client_networks = [module.prod-spoke-vpc.self_link]
+    forwarders      = { for ip in var.dns.prod : ip => null }
+  }
 }
 
 # Google APIs

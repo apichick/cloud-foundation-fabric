@@ -51,12 +51,6 @@ variable "enable_logging" {
   nullable    = false
 }
 
-variable "forwarders" {
-  description = "Map of {IPV4_ADDRESS => FORWARDING_PATH} for 'forwarding' zone types. Path can be 'default', 'private', or null for provider default."
-  type        = map(string)
-  default     = {}
-}
-
 variable "iam" {
   description = "IAM bindings in {ROLE => [MEMBERS]} format."
   type        = map(list(string))
@@ -126,11 +120,13 @@ variable "type" {
 
 variable "zone_config" {
   description = "Configuration of the zone."
-  type        = object({
-    domain = string
+  type = object({
+    domain          = string
     client_networks = optional(list(string))
-    peer_network = optional(string)
+    peer_network    = optional(string)
+    forwarders      = optional(map(string))
   })
+  
   default = null
 }
 

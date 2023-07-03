@@ -28,12 +28,14 @@ module "landing-dns-fwd-onprem-example" {
   project_id = module.landing-project.project_id
   type       = "forwarding"
   name       = "example-com"
-  domain     = "onprem.example.com."
-  client_networks = [
-    module.landing-untrusted-vpc.self_link,
-    module.landing-trusted-vpc.self_link
-  ]
-  forwarders = { for ip in var.dns.onprem : ip => null }
+  zone_config = {
+    domain = "onprem.example.com."
+    client_networks = [
+      module.landing-untrusted-vpc.self_link,
+      module.landing-trusted-vpc.self_link
+    ]
+    forwarders = { for ip in var.dns.onprem : ip => null }
+  }
 }
 
 moved {
@@ -46,12 +48,14 @@ module "landing-dns-fwd-onprem-rev-10" {
   project_id = module.landing-project.project_id
   type       = "forwarding"
   name       = "root-reverse-10"
-  domain     = "10.in-addr.arpa."
-  client_networks = [
-    module.landing-untrusted-vpc.self_link,
-    module.landing-trusted-vpc.self_link
-  ]
-  forwarders = { for ip in var.dns.onprem : ip => null }
+  zone_config = {
+    domain = "10.in-addr.arpa."
+    client_networks = [
+      module.landing-untrusted-vpc.self_link,
+      module.landing-trusted-vpc.self_link
+    ]
+    forwarders = { for ip in var.dns.onprem : ip => null }
+  }
 }
 
 moved {
@@ -64,11 +68,13 @@ module "landing-dns-priv-gcp" {
   project_id = module.landing-project.project_id
   type       = "private"
   name       = "gcp-example-com"
-  domain     = "gcp.example.com."
-  client_networks = [
-    module.landing-untrusted-vpc.self_link,
-    module.landing-trusted-vpc.self_link
-  ]
+  zone_config = {
+    domain = "gcp.example.com."
+    client_networks = [
+      module.landing-untrusted-vpc.self_link,
+      module.landing-trusted-vpc.self_link
+    ]
+  }
   recordsets = {
     "A localhost" = { records = ["127.0.0.1"] }
   }

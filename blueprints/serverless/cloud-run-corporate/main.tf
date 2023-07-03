@@ -490,12 +490,14 @@ module "vm_test_svc1" {
 ###############################################################################
 
 module "private_dns_main" {
-  source          = "../../../modules/dns"
-  project_id      = module.project_main.project_id
-  type            = "private"
-  name            = "dns-main"
-  client_networks = [module.vpc_main.self_link]
-  domain          = local.cloud_run_domain
+  source     = "../../../modules/dns"
+  project_id = module.project_main.project_id
+  type       = "private"
+  name       = "dns-main"
+  zone_config = {
+    domain          = local.cloud_run_domain
+    client_networks = [module.vpc_main.self_link]
+  }
   recordsets = {
     "A *" = { records = [module.psc_addr_main.psc_addresses["psc-addr"].address] }
   }
@@ -507,8 +509,10 @@ module "private_dns_main_custom" {
   project_id      = module.project_main.project_id
   type            = "private"
   name            = "dns-main-custom"
-  client_networks = [module.vpc_main.self_link]
-  domain          = format("%s.", var.custom_domain)
+  zone_config = {
+    domain          = format("%s.", var.custom_domain)
+    client_networks = [module.vpc_main.self_link]  
+  }
   recordsets = {
     "A " = { records = [module.ilb-l7[0].address] }
   }
@@ -520,8 +524,10 @@ module "private_dns_onprem" {
   project_id      = module.project_onprem[0].project_id
   type            = "private"
   name            = "dns-onprem"
-  client_networks = [module.vpc_onprem[0].self_link]
-  domain          = local.cloud_run_domain
+  zone_config = {
+    domain          = local.cloud_run_domain
+    client_networks = [module.vpc_onprem[0].self_link]
+  }
   recordsets = {
     "A *" = { records = [module.psc_addr_main.psc_addresses["psc-addr"].address] }
   }
@@ -533,8 +539,10 @@ module "private_dns_prj1" {
   project_id      = module.project_prj1[0].project_id
   type            = "private"
   name            = "dns-prj1"
-  client_networks = [module.vpc_prj1[0].self_link]
-  domain          = local.cloud_run_domain
+  zone_config = {
+    domain          = local.cloud_run_domain  
+    client_networks = [module.vpc_prj1[0].self_link]
+  }
   recordsets = {
     "A *" = { records = [module.psc_addr_prj1[0].psc_addresses["psc-addr"].address] }
   }

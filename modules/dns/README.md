@@ -10,11 +10,11 @@ For DNSSEC configuration, refer to the [`dns_managed_zone` documentation](https:
 
 ```hcl
 module "private-dns" {
-  source          = "./fabric/modules/dns"
-  project_id      = "myproject"
-  type            = "private"
-  name            = "test-example"
-  zone_config     = {
+  source     = "./fabric/modules/dns"
+  project_id = "myproject"
+  type       = "private"
+  name       = "test-example"
+  zone_config = {
     domain          = "test.example."
     client_networks = [var.vpc.self_link]
   }
@@ -33,15 +33,15 @@ module "private-dns" {
 
 ```hcl
 module "private-dns" {
-  source          = "./fabric/modules/dns"
-  project_id      = "myproject"
-  type            = "forwarding"
-  name            = "test-example"
-  zone_config     = {
+  source     = "./fabric/modules/dns"
+  project_id = "myproject"
+  type       = "forwarding"
+  name       = "test-example"
+  zone_config = {
     domain          = "test.example."
     client_networks = [var.vpc.self_link]
+    forwarders = { "10.0.1.1" = null, "1.2.3.4" = "private" }
   }
-  forwarders      = { "10.0.1.1" = null, "1.2.3.4" = "private" }
 }
 # tftest modules=1 resources=1 inventory=forwarding-zone.yaml
 ```
@@ -50,16 +50,16 @@ module "private-dns" {
 
 ```hcl
 module "private-dns" {
-  source          = "./fabric/modules/dns"
-  project_id      = "myproject"
-  type            = "peering"
-  name            = "test-example"
-  zone_config     = {
+  source      = "./fabric/modules/dns"
+  project_id  = "myproject"
+  type        = "peering"
+  name        = "test-example"
+  description = "Peering zone for ."
+  zone_config = {
     domain          = "."
     client_networks = [var.vpc.self_link]
+    peer_network    = var.vpc2.self_link
   }
-  description     = "Forwarding zone for ."
-  peer_network    = var.vpc2.self_link
 }
 # tftest modules=1 resources=1 inventory=peering-zone.yaml
 ```
@@ -68,11 +68,11 @@ module "private-dns" {
 
 ```hcl
 module "private-dns" {
-  source          = "./fabric/modules/dns"
-  project_id      = "myproject"
-  type            = "private"
-  name            = "test-example"
-  zone_config     = {
+  source     = "./fabric/modules/dns"
+  project_id = "myproject"
+  type       = "private"
+  name       = "test-example"
+  zone_config = {
     domain          = "test.example."
     client_networks = [var.vpc.self_link]
   }
@@ -103,10 +103,10 @@ module "private-dns" {
 
 ```hcl
 module "private-dns" {
-  source          = "./fabric/modules/dns"
-  project_id      = "myproject"
-  type            = "reverse-managed"
-  name            = "test-example"
+  source     = "./fabric/modules/dns"
+  project_id = "myproject"
+  type       = "reverse-managed"
+  name       = "test-example"
   zone_config = {
     domain          = "0.0.10.in-addr.arpa."
     client_networks = [var.vpc.self_link]
@@ -119,10 +119,10 @@ module "private-dns" {
 
 ```hcl
 module "public-dns" {
-  source      = "./fabric/modules/dns"
-  project_id  = "myproject"
-  type        = "public"
-  name        = "example"
+  source     = "./fabric/modules/dns"
+  project_id = "myproject"
+  type       = "public"
+  name       = "example"
   zone_config = {
     domain = "example.com."
   }
@@ -136,20 +136,6 @@ module "public-dns" {
 # tftest modules=1 resources=4 inventory=public-zone.yaml
 ```
 
-### Add records to an existing zone
-
-```hcl
-module "public-dns" {
-  source      = "./fabric/modules/dns"
-  project_id  = "myproject"
-  type        = "public"
-  name        = "example"
-  recordsets = {
-    "A myhost" = { ttl = 300, records = ["127.0.0.1"] }
-  }
-}
-# tftest modules=1 resources=1 inventory=records.yaml
-```
 <!-- BEGIN TFDOC -->
 
 ## Variables

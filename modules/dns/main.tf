@@ -16,8 +16,9 @@
 
 locals {
   # split record name and type and set as keys in a map
-  domain = (var.zone_config != null ? 
-  var.zone_config.domain: 
+  local.managed_zone = var.zone_config = null &&
+  domain = (var.zone_config != null ?
+    var.zone_config.domain :
   data.google_dns_managed_zone.public[0].dns_name)
   _recordsets_0 = {
     for key, attrs in var.recordsets :
@@ -36,7 +37,7 @@ locals {
           : "${attrs.name}.${local.domain}"
         )
       )
-    })    
+    })
   }
   # split recordsets between regular, geo and wrr
   geo_recordsets = {
@@ -56,7 +57,7 @@ locals {
   }
   zone = (
     var.zone_config == null
-    ? try(data.google_dns_managed_zone.public.0, null) 
+    ? try(data.google_dns_managed_zone.public.0, null)
     : try(
       google_dns_managed_zone.non-public.0, try(
         google_dns_managed_zone.public.0, null
@@ -69,26 +70,24 @@ locals {
 }
 
 resource "google_dns_managed_zone" "non-public" {
-  count          = (var.zone_config != null && var.type != "public") ? 1 : 0
+  count          = try(var.zone_config.client_networks, null) == null ? 0 : 1
   provider       = google-beta
   project        = var.project_id
   name           = var.name
   dns_name       = local.domain
   description    = var.description
   visibility     = "private"
-  reverse_lookup = (var.type == "reverse-managed")
+  reverse_lookup = endswith(var.zone_config.domain, ".in-addr.arpa.")
 
   dynamic "forwarding_config" {
     for_each = (
-      var.type == "forwarding" &&
-      var.forwarders != null &&
-      length(var.forwarders) > 0
+      length(coalesce(try(var.zone_config.forwarders, null), {})) > 0
       ? [""]
       : []
     )
     content {
       dynamic "target_name_servers" {
-        for_each = var.forwarders
+        for_each = var.zone_config.forwarders
         iterator = forwarder
         content {
           ipv4_address    = forwarder.key
@@ -100,20 +99,20 @@ resource "google_dns_managed_zone" "non-public" {
 
   dynamic "peering_config" {
     for_each = (
-      var.type == "peering" && try(var.zone_config.peer_network,null) != null ? [""] : []
+      try(var.zone_config.peer_network, null) != null ? [""] : []
     )
     content {
       target_network {
-        network_url = var.peer_network
+        network_url = var.zone_config.peer_network
       }
     }
   }
 
   dynamic "private_visibility_config" {
-    for_each = length(try(var.zone_config.client_networks, [])) > 0 ? [""] : []
+    for_each = length(coalesce(try(var.zone_config.client_networks, null), [])) > 0 ? [""] : []
     content {
       dynamic "networks" {
-        for_each = var.client_networks
+        for_each = var.zone_config.client_networks
         iterator = network
         content {
           network_url = network.value
@@ -124,9 +123,9 @@ resource "google_dns_managed_zone" "non-public" {
 
   dynamic "service_directory_config" {
     for_each = (
-      var.type == "service-directory" && var.service_directory_namespace != null
-      ? [""]
-      : []
+      var.service_directory_namespace == null
+      ? []
+      : [""]
     )
     content {
       namespace {
@@ -146,7 +145,7 @@ data "google_dns_managed_zone" "public" {
 }
 
 resource "google_dns_managed_zone" "public" {
-  count       = (var.zone_config != null && var.type == "public") ? 1 : 0
+  count       = try(var.zone_config.client_networks, null) == null ? 1 : 0
   project     = var.project_id
   name        = var.name
   dns_name    = local.domain
@@ -182,13 +181,11 @@ resource "google_dns_managed_zone" "public" {
 }
 
 resource "google_dns_managed_zone_iam_binding" "iam_bindings" {
-  for_each = coalesce(var.iam, {})
-  project  = var.project_id
-  managed_zone = (var.type == "public"
-    ? google_dns_managed_zone.public[0].name
-  : google_dns_managed_zone.non-public[0].name)
-  role    = each.key
-  members = each.value
+  for_each     = var.zone_config !=coalesce(var.iam, {})
+  project      = var.project_id
+  managed_zone = try(google_dns_managed_zone.public[0].name, google_dns_managed_zone.non-public[0].name)
+  role         = each.key
+  members      = each.value
 }
 
 data "google_dns_keys" "dns_keys" {
